@@ -20,6 +20,16 @@ Generates JSON if you return an object.
 router.get("/json", () => { data: [1, 2, 3] });
 ```
 
+Infers parameters from the path.
+
+```ts
+// 'params' is of type { id: string }
+router.get("/users/:id", ({ params }) => {
+    const id = params.id;
+    // ...
+});
+```
+
 Sane error handling.
 
 ```ts
