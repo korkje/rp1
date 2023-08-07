@@ -160,11 +160,15 @@ export class Router {
             return Response.json(result, { status, headers });
         }
         catch (error) {
-            console.error(error);
-
             if (error instanceof ServerError) {
+                if (error.log) {
+                    console.error(error);
+                }
+
                 return error.response();
             }
+
+            console.error(error);
 
             const serverError = new ServerError({
                 status: 500,

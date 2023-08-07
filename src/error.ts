@@ -2,20 +2,24 @@ export type ServerErrorInit = {
     status?: number;
     message?: string;
     expose?: boolean;
+    log?: boolean;
 };
 
 export class ServerError extends Error {
     private status: number;
     private expose: boolean;
+    public log: boolean;
 
     constructor({
         status = 500,
         message = "Internal Server Error",
         expose = false,
+        log = false,
     }: ServerErrorInit = {}) {
         super(message);
         this.status = status;
         this.expose = expose;
+        this.log = log;
     }
 
     response() {
