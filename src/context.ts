@@ -8,7 +8,11 @@ export type ExtractParams<Path extends string> =
 export class Context<Path extends string> {
     public response: Response;
 
-    constructor(public params: Record<ExtractParams<Path>, string>, public request: Request) {
+    constructor(
+        public params: Record<ExtractParams<Path>, string>,
+        public request: Request,
+        public info: Deno.ServeHandlerInfo,
+    ) {
         this.response = new Response(null, { status: 204 });
     }
 

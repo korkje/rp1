@@ -119,7 +119,7 @@ export class Router {
         return this;
     }
 
-    public async handle(request: Request) {
+    public async handle(request: Request, info: Deno.ServeHandlerInfo) {
         const { pathname } = new URL(request.url);
         const method = request.method.toLowerCase();
         const match = this.match(method, pathname as `/${string}`);
@@ -129,7 +129,7 @@ export class Router {
         }
 
         const [handler, params] = match;
-        const context = new Context(params, request);
+        const context = new Context(params, request, info);
 
         try {
             const runner = this.compose();
