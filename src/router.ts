@@ -39,14 +39,16 @@ export class Router {
             return this.runner;
         }
 
-        const middlewares = [...this.middlewares];
+        if (this.middlewares.length === 0) {
+            return this.runner = async (context, handler) => await handler(context);
+        }
 
         return this.runner = async (context, handler) => {
             let i = 0;
             let result;
 
             const next = async () => {
-                const middleware = middlewares[i++];
+                const middleware = this.middlewares[i++];
 
                 if (middleware) {
                     await middleware(context, next);
