@@ -1,6 +1,6 @@
-import Router from "../router.ts";
-import { ServerError } from "../error.ts";
-import { assertEquals } from "https://deno.land/std@0.197.0/testing/asserts.ts";
+import { assertEquals } from "./deps.ts";
+import Router from "../lib/router.ts";
+import { ServerError } from "../lib/error.ts";
 
 const router = new Router();
 
@@ -12,7 +12,7 @@ router.get("/custom", () => {
     throw new ServerError({ message: "Pay up!", status: 402 });
 });
 
-Deno.serve({ port: 9001, handler: router.handle });
+Deno.serve({ port: 9001 }, router.handle);
 
 Deno.test("Regular Error leads to 500", async () => {
     const res = await fetch("http://localhost:9001/native");

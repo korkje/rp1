@@ -1,6 +1,6 @@
-import { assertEquals } from "https://deno.land/std@0.197.0/testing/asserts.ts";
+import { assertEquals } from "./deps.ts";
 
-import Router from "../router.ts";
+import Router from "../lib/router.ts";
 
 const router = new Router();
 
@@ -9,7 +9,7 @@ router
     .get("/json", () => ({ hello: "world" }))
     .get("/params/:a/:b", ({ params }) => params);
 
-Deno.serve({ port: 9001, handler: router.handle });
+Deno.serve({ port: 9001 }, router.handle);
 
 Deno.test("Simple empty response", async () => {
     const res = await fetch("http://localhost:9001");

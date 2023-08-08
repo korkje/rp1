@@ -1,6 +1,6 @@
-import { assertEquals } from "https://deno.land/std@0.197.0/testing/asserts.ts";
+import { assertEquals } from "./deps.ts";
 
-import Router from "../router.ts";
+import Router from "../lib/router.ts";
 
 const router = new Router();
 
@@ -18,7 +18,7 @@ router.get("/ws", ({ request }) => {
     return response;
 });
 
-Deno.serve({ port: 9001, handler: router.handle });
+Deno.serve({ port: 9001 }, router.handle);
 
 Deno.test("WebSocket", async () => {
     const ws = new WebSocket("ws://localhost:9001/ws");

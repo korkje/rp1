@@ -1,10 +1,11 @@
 import Context from "./context.ts";
-import { ServerError } from "./error.ts";
-import { Middleware, Runner } from "./middleware.ts";
+import ServerError from "./error.ts";
 
-// deno-lint-ignore no-explicit-any
-export type Handler<Path extends string> = (context: Context<Path>) => any | Promise<any>;
-export type GenericHandler = Handler<string>;
+export type Handler<Path extends string = string> = (context: Context<Path>) => unknown | Promise<unknown>;
+export type Middleware = (context: Context, next: () => Promise<unknown>) => unknown | Promise<unknown>;
+export type Runner = (context: Context, handler: Handler) => ReturnType<Handler>;
+export const methods = ["get", "post", "put", "delete", "patch", "head", "options"] as const;
+export const notFound: Handler = () => new Response(null, { status: 404 });
 
 export interface Router {
     get<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
@@ -16,11 +17,9 @@ export interface Router {
     options<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
 }
 
-export const methods = ["get", "post", "put", "delete", "patch", "head", "options"] as const;
-
 export class Router {
-    private cache = new Map<string, [GenericHandler, object] | undefined>;
-    private routes = new Map<string, GenericHandler>();
+    private cache = new Map<string, [Handler, object] | undefined>;
+    private routes = new Map<string, Handler>();
     private patterns: URLPattern[] = [];
     private middlewares: Middleware[] = [];
     private runner: Runner | undefined = undefined;
@@ -29,23 +28,19 @@ export class Router {
         this.handle = this.handle.bind(this);
 
         for (const method of methods) {
-            // @ts-ignore: shoe-horns convenience methods into App
+            // @ts-ignore: shoe-horn convenience methods into class
             this[method] = (path, handler) => this.add(method, path, handler);
         }
     }
 
-    private compose() {
-        if (this.runner) {
-            return this.runner;
-        }
-
+    private compose(): Runner {
         if (this.middlewares.length === 0) {
-            return this.runner = async (context, handler) => await handler(context);
+            return async (context, handler) => await handler(context);
         }
 
-        return this.runner = async (context, handler) => {
+        return async (context, handler) => {
             let i = 0;
-            let result;
+            let result: unknown;
 
             const next = async () => {
                 const middleware = this.middlewares[i++];
@@ -56,21 +51,17 @@ export class Router {
                 else {
                     result = await handler(context);
                 }
+
+                return result;
             };
 
-            await next();
-
-            return result;
-        }
+            return await next();
+        };
     }
 
-    private add<Path extends `/${string}`>(
-        method: typeof methods[number],
-        path: Path,
-        handler: Handler<Path>
-    ) {
+    private add(method: string, path: string, handler: Handler) {
         const key = `${method} ${path}`;
-        this.routes.set(key, handler as GenericHandler);
+        this.routes.set(key, handler);
 
         const pattern = new URLPattern({ pathname: path });
         const exists = this.patterns.some(p => p.pathname === pattern.pathname);
@@ -122,18 +113,13 @@ export class Router {
     public async handle(request: Request, info: Deno.ServeHandlerInfo) {
         const { pathname } = new URL(request.url);
         const method = request.method.toLowerCase();
-        const match = this.match(method, pathname as `/${string}`);
+        const [handler, params] = this.match(method, pathname as `/${string}`) ?? [notFound, {}];
 
-        if (!match) {
-            return new Response("Not Found", { status: 404 });
-        }
-
-        const [handler, params] = match;
         const context = new Context(params, request, info);
 
         try {
-            const runner = this.compose();
-            const result = await runner(context, handler);
+            this.runner ??= this.compose();
+            const result = await this.runner(context, handler);
 
             if (result === undefined) {
                 return context.response;

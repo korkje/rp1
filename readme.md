@@ -1,4 +1,4 @@
-# rp1
+# rp1 🚀
 Blazingly fast and simple web framework for Deno, suitably named after the [rocket fuel](https://en.wikipedia.org/wiki/RP-1).
 
 ```ts
@@ -13,7 +13,7 @@ Deno.serve(router.handle);
 
 ## Features
 
-Generates JSON if you return an object.
+Generates JSON for [serializable](https://www.json.org/json-en.html) values.
 
 ```ts
 // '{ "data": [1, 2, 3] }' with a 200 status code
@@ -33,13 +33,13 @@ router.get("/users/:id", ({ params }) => {
 Sane error handling.
 
 ```ts
-import { ServerError } from "https://deno.land/x/rp1/mod.ts";
+import Router, { ServerError } from "https://deno.land/x/rp1/mod.ts";
 
-// '{ "error": { "status": 402, "message": "Expected dollars!" } }'
-router.post("/paypal", () => {
+// '{ "error": { "status": 418, "message": "I'm a teapot" } }'
+router.get("/coffee", () => {
     throw new ServerError({
-        status: 402,
-        message: "Expected dollars!"
+        status: 418,
+        message: "I'm a teapot"
     });
 });
 ```
@@ -66,27 +66,36 @@ router.use(async ({ request }, next) => {
 });
 ```
 
-CORS middleware included.
+CORs middleware included.
 
 ```ts
-import { cors } from "https://deno.land/x/rp1/mod.ts";
+import cors from "https://deno.land/x/rp1/middleware/cors.ts";
 
 router.use(cors());
 ```
 
-Configure CORS easily.
+...which is easily configurable.
 
 ```ts
-import { cors, echo } from "https://deno.land/x/rp1/mod.ts";
+import cors, { echo } from "https://deno.land/x/rp1/middleware/cors.ts";
+import Skip from "https://deno.land/x/rp1/middleware/skip.ts";
+
+// Skip CORS for public routes
+const isPublic: Skip = ({ request }) => {
+    const url = new URL(request.url);
+    return url.pathname.startsWith("/public");
+};
 
 router.use(cors({
+    skip: isPublic, 
     origin: echo,
     methods: ["GET", "POST"],
-    headers: ["Content-Type"],
+    headers: "Content-Type",
+    // ...
 }));
 ```
 
-Uses native `Request` object, so WebSockets are supported.
+Uses native `Request` object, so WebSockets are supported out of the box.
 
 ```ts
 router.get("/ws", ({ request }) => {
