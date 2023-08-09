@@ -150,11 +150,13 @@ export class Router {
             return Response.json(result, { status, headers });
         }
         catch (error) {
-            console.error(error);
+            if (error instanceof ServerError) {
+                console.log(error.stack);
+                return error.response();
+            }
 
-            return error instanceof ServerError
-                ? error.response()
-                : new ServerError().response();
+            console.log(error);
+            return new ServerError().response();
         }
     }
 }

@@ -30,14 +30,21 @@ router.get("/users/:id", ({ params }) => {
 });
 ```
 
-Sane error handling.
+Sane error handling. Thrown errors are logged (`console.error`), returned errors are not. Both get serialized to JSON. Optionally include stack trace.
 
 ```ts
-import Router, { error } from "https://deno.land/x/rp1/mod.ts";
+import { error } from "https://deno.land/x/rp1/mod.ts";
 
 // '{ "status": 418, "message": "I'm a teapot" }'
 router.get("/coffee", () => {
     throw error(418, "I'm a teapot");
+    // ^ Logged
+});
+
+// '{ "status": 402, "message": "Missing $$$", "stack": "..." }'
+router.post("/cash", () => {
+    return error(402, "Missing $$$").expose();
+    // ^ Not logged                    ^ Include stack trace
 });
 ```
 
@@ -75,16 +82,13 @@ router.use(cors());
 
 ```ts
 import cors, { echo } from "https://deno.land/x/rp1/middleware/cors.ts";
-import Skip from "https://deno.land/x/rp1/middleware/skip.ts";
-
-// Skip CORS for public routes
-const isPublic: Skip = ({ request }) => {
-    const url = new URL(request.url);
-    return url.pathname.startsWith("/public");
-};
 
 router.use(cors({
-    skip: isPublic, 
+    // Skip CORS for public paths
+    skip: ({ request }) => {
+        const url = new URL(request.url);
+        return url.pathname.startsWith("/public/");
+    }, 
     origin: echo,
     methods: ["GET", "POST"],
     headers: "Content-Type",

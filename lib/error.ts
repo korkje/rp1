@@ -10,8 +10,13 @@ export class ServerError extends Error {
         expose = false,
     ]: ServerErrorParams) {
         super(message);
+        this.name = `ServerError(${status})`;
         this.status = status;
         this.exposed = expose;
+    }
+
+    public toString() {
+        return `${this.name}: ${this.message}`;
     }
 
     public expose(expose?: boolean) {
