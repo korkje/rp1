@@ -33,14 +33,11 @@ router.get("/users/:id", ({ params }) => {
 Sane error handling.
 
 ```ts
-import Router, { ServerError } from "https://deno.land/x/rp1/mod.ts";
+import Router, { error } from "https://deno.land/x/rp1/mod.ts";
 
-// '{ "error": { "status": 418, "message": "I'm a teapot" } }'
+// '{ "status": 418, "message": "I'm a teapot" }'
 router.get("/coffee", () => {
-    throw new ServerError({
-        status: 418,
-        message: "I'm a teapot"
-    });
+    throw error(418, "I'm a teapot");
 });
 ```
 
@@ -66,7 +63,7 @@ router.use(async ({ request }, next) => {
 });
 ```
 
-CORs middleware included.
+CORS middleware included.
 
 ```ts
 import cors from "https://deno.land/x/rp1/middleware/cors.ts";

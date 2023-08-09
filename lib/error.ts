@@ -1,37 +1,39 @@
-export type ServerErrorInit = {
-    status?: number;
-    message?: string;
-    expose?: boolean;
-    log?: boolean;
-};
+export type ServerErrorParams = [] | [status: number, message: string, expose?: boolean];
 
 export class ServerError extends Error {
-    private status: number;
-    private expose: boolean;
-    public log: boolean;
+    public status: number;
+    private exposed: boolean;
 
-    constructor({
+    constructor(...[
         status = 500,
         message = "Internal Server Error",
         expose = false,
-        log = false,
-    }: ServerErrorInit = {}) {
+    ]: ServerErrorParams) {
         super(message);
         this.status = status;
-        this.expose = expose;
-        this.log = log;
+        this.exposed = expose;
     }
 
-    response() {
-        const error = {
-            message: this.message,
-            stack: this.expose ? this.stack: undefined,
-            status: this.status,
+    public expose(expose?: boolean) {
+        this.exposed = expose ?? true;
+        return this;
+    }
+
+    public response() {
+        const { status, message, exposed, stack } = this;
+
+        const data = {
+            status,
+            message,
+            stack: exposed ? stack : undefined,
             url: `https://http.cat/${this.status}`,
         };
 
-        return Response.json({ error }, { status: this.status });
+        return Response.json(data, { status });
     }
 }
 
-export default ServerError;
+
+export const error = (...params: ServerErrorParams) => new ServerError(...params);
+
+export default error;

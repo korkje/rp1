@@ -1,4 +1,4 @@
-import ServerError, { ServerErrorInit } from "./error.ts";
+import { ServerError, ServerErrorParams } from "./error.ts";
 
 export type ExtractParams<Path extends string> =
     Path extends `${infer _}:${infer Param}/${infer Rest}`
@@ -16,9 +16,9 @@ export class Context<Path extends string = string> {
         this.response = new Response(null, { status: 204 });
     }
 
-    public assert(condition: boolean, error: ServerErrorInit = {}) {
+    public assert(condition: boolean, ...rest: ServerErrorParams) {
         if (!condition) {
-            throw new ServerError(error);
+            throw new ServerError(...rest);
         }
     }
 }

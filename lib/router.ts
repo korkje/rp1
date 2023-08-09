@@ -1,5 +1,5 @@
 import Context from "./context.ts";
-import ServerError from "./error.ts";
+import { ServerError } from "./error.ts";
 
 export type Handler<Path extends string = string> = (context: Context<Path>) => unknown | Promise<unknown>;
 export type Middleware = (context: Context, next: () => Promise<unknown>) => unknown | Promise<unknown>;
@@ -146,22 +146,11 @@ export class Router {
             return Response.json(result, { status, headers });
         }
         catch (error) {
-            if (error instanceof ServerError) {
-                if (error.log) {
-                    console.error(error);
-                }
-
-                return error.response();
-            }
-
             console.error(error);
 
-            const serverError = new ServerError({
-                status: 500,
-                message: "Internal Server Error",
-            });
-
-            return serverError.response();
+            return error instanceof ServerError
+                ? error.response()
+                : new ServerError().response();
         }
     }
 }

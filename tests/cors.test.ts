@@ -8,25 +8,25 @@ router.use(cors({ origins: echo, expose: "Content-Type" }));
 
 router.post("/post", () => {});
 
-Deno.serve({ port: 9001 }, router.handle);
+Deno.serve(router.handle);
 
 Deno.test("Headers set correctly for OPTIONS request", async () => {
-    const res = await fetch("http://localhost:9001/post", {
+    const res = await fetch("http://localhost:8000/post", {
         method: "OPTIONS",
         headers: {
-            "Origin": "localhost:9001",
+            "Origin": "localhost:8000",
             "Access-Control-Request-Method": "POST",
             "Access-Control-Request-Headers": "Content-Type",
         },
     });
 
-    assertEquals(res.headers.get("Access-Control-Allow-Origin"), "localhost:9001");
+    assertEquals(res.headers.get("Access-Control-Allow-Origin"), "localhost:8000");
     assertEquals(res.headers.get("Access-Control-Allow-Headers"), "Content-Type");
     assertEquals(res.headers.get("Access-Control-Expose-Headers"), null);
 });
 
 Deno.test("Headers set correctly for POST request", async () => {
-    const res = await fetch("http://localhost:9001/post", {
+    const res = await fetch("http://localhost:8000/post", {
         method: "POST",
         headers: {
             "Access-Control-Request-Headers": "Content-Type",
@@ -40,7 +40,7 @@ Deno.test("Headers set correctly for POST request", async () => {
 });
 
 Deno.test("Correct behaviour for non-existent routes", async () => {
-    const res = await fetch("http://localhost:9001");
+    const res = await fetch("http://localhost:8000");
 
     res.body?.cancel();
 

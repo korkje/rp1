@@ -1,6 +1,6 @@
 import { assertEquals } from "./deps.ts";
 import Router from "../lib/router.ts";
-import ServerError from "../lib/error.ts";
+import error from "../lib/error.ts";
 
 const router = new Router();
 
@@ -15,7 +15,7 @@ router.use(async ({ request, response }, next) => {
     const url = new URL(request.url);
 
     if (url.pathname === "/throw") {
-        throw new ServerError({ status: 500, message: "Test" });
+        throw error(500, "Test");
     }
     else if (url.pathname !== "/skip") {
         await next();
@@ -30,13 +30,13 @@ router.use(async ({ response }, next) => {
     response.headers.append("X-Test", "4");
 });
 
-Deno.serve({ port: 9001 }, router.handle);
+Deno.serve(router.handle);
 
 Deno.test("Middleware ordering", async () => {
     let called = false;
     router.get("/", () => called = true);
 
-    const res = await fetch("http://localhost:9001");
+    const res = await fetch("http://localhost:8000");
     await res.body?.cancel();
 
     assertEquals(called, true);
@@ -49,7 +49,7 @@ Deno.test("Middleware skip", async () => {
     let called = false;
     router.get("/skip", () => called = true);
 
-    const res = await fetch("http://localhost:9001/skip");
+    const res = await fetch("http://localhost:8000/skip");
     await res.body?.cancel();
 
     assertEquals(called, false);
@@ -62,7 +62,7 @@ Deno.test("Middleware error", async () => {
     let called = false;
     router.get("/throw", () => called = true);
 
-    const res = await fetch("http://localhost:9001/throw");
+    const res = await fetch("http://localhost:8000/throw");
     await res.body?.cancel();
 
     assertEquals(called, false);

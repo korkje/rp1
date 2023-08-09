@@ -18,10 +18,10 @@ router.get("/ws", ({ request }) => {
     return response;
 });
 
-Deno.serve({ port: 9001 }, router.handle);
+Deno.serve(router.handle);
 
 Deno.test("WebSocket", async () => {
-    const ws = new WebSocket("ws://localhost:9001/ws");
+    const ws = new WebSocket("ws://localhost:8000/ws");
 
     const openPromise = new Promise(resolve => {
         ws.addEventListener("open", resolve);
