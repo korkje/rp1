@@ -33,7 +33,6 @@ export class ServerError extends Error {
     }
 }
 
-
 export const error = (...params: ServerErrorParams) => new ServerError(...params);
 
 export default error;

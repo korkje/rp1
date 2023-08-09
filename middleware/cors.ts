@@ -1,5 +1,5 @@
+import Context from "../lib/context.ts";
 import { Middleware } from "../lib/router.ts";
-import { Skip, noSkip } from "./skip.ts";
 
 export const echo = Symbol("echo");
 export type Echo = typeof echo;
@@ -21,7 +21,7 @@ export const enum Header {
 }
 
 export type CORSOptions = {
-    skip?: Skip;
+    skip?: (context: Context) => boolean | Promise<boolean>;
     origins?: Echo | string | string[];
     methods?: Echo | string | string[];
     headers?: Echo | string | string[];
@@ -31,7 +31,7 @@ export type CORSOptions = {
 };
 
 export const cors = ({
-    skip = noSkip,
+    skip = () => false,
     origins = "*",
     methods = echo,
     headers = echo,
@@ -39,7 +39,6 @@ export const cors = ({
     expose,
     maxAge = 86400,
 }: CORSOptions = {}): Middleware => async (context, next) => {
-
     if (await skip(context)) {
         return next();
     }

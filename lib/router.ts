@@ -4,6 +4,7 @@ import { ServerError } from "./error.ts";
 export type Handler<Path extends string = string> = (context: Context<Path>) => unknown | Promise<unknown>;
 export type Middleware = (context: Context, next: () => Promise<unknown>) => unknown | Promise<unknown>;
 export type Runner = (context: Context, handler: Handler) => ReturnType<Handler>;
+
 export const methods = ["get", "post", "put", "delete", "patch", "head", "options"] as const;
 export const notFound: Handler = () => new Response(null, { status: 404 });
 
@@ -28,8 +29,7 @@ export class Router {
         this.handle = this.handle.bind(this);
 
         for (const method of methods) {
-            // @ts-ignore: shoe-horn convenience methods into class
-            this[method] = (path, handler) => this.add(method, path, handler);
+            this[method] = (path, handler) => this.add(method, path, handler as Handler);
         }
     }
 
@@ -62,6 +62,10 @@ export class Router {
     private add(method: string, path: string, handler: Handler) {
         const key = `${method} ${path}`;
         this.routes.set(key, handler);
+
+        if (!path.includes(":")) {
+            this.cache.set(key, [handler, {}]);
+        }
 
         const pattern = new URLPattern({ pathname: path });
         const exists = this.patterns.some(p => p.pathname === pattern.pathname);

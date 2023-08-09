@@ -3,7 +3,7 @@ import { ServerError, ServerErrorParams } from "./error.ts";
 export type ExtractParams<Path extends string> =
     Path extends `${infer _}:${infer Param}/${infer Rest}`
     ? Param | ExtractParams<Rest>
-    : Path extends `${infer _}:${infer P}` ? P : never;
+    : Path extends `${infer _}:${infer Param}` ? Param : never;
 
 export class Context<Path extends string = string> {
     public response: Response;
