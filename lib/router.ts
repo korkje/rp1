@@ -23,7 +23,7 @@ export class Router {
     private routes = new Map<string, Handler>();
     private patterns: URLPattern[] = [];
     private middlewares: Middleware[] = [];
-    private runner: Runner | undefined = undefined;
+    private runner?: Runner = undefined;
 
     constructor() {
         this.handle = this.handle.bind(this);

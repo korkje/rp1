@@ -72,3 +72,17 @@ Deno.test("Middleware error", async () => {
     const test = res.headers.get("X-Test");
     assertEquals(test, null);
 });
+
+Deno.test("Handler result propagates", async () => {
+    router.get("/result", ({ response }) => {
+        response.headers.append("X-Test", "result");
+        return "result";
+    });
+
+    const res = await fetch("http://localhost:8000/result");
+
+    assertEquals(await res.json(), "result");
+
+    const test = res.headers.get("X-Test");
+    assertEquals(test, "1, 2, 3, result, 4, 5, 6");
+});
