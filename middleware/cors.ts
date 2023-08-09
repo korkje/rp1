@@ -53,7 +53,7 @@ export const cors = ({
         _origin = requestOrigin ?? "*";
     }
     else {
-        for (const candidate in array(origins)) {
+        for (const candidate of array(origins)) {
             if (candidate === "*" && credentials) {
                 _origin = requestOrigin ?? "*";
                 break;
