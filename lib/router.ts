@@ -1,6 +1,7 @@
 import Context from "./context.ts";
 import { ServerError } from "./error.ts";
 
+export type HandlerOptions = { cache?: boolean; };
 export type Handler<Path extends string = string> = (context: Context<Path>) => unknown | Promise<unknown>;
 export type Middleware = (context: Context, next: () => Promise<unknown>) => unknown | Promise<unknown>;
 export type Runner = (context: Context, handler: Handler) => ReturnType<Handler>;
@@ -8,19 +9,21 @@ export type Runner = (context: Context, handler: Handler) => ReturnType<Handler>
 export const methods = ["get", "post", "put", "delete", "patch", "head", "options"] as const;
 export const notFound: Handler = () => new Response(null, { status: 404 });
 
+export type MethodParams<Path extends `/${string}`> = [path: Path, handler: Handler<Path>, options?: HandlerOptions];
+
 export interface Router {
-    get<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
-    post<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
-    put<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
-    delete<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
-    patch<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
-    head<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
-    options<Path extends `/${string}`>(path: Path, handler: Handler<Path>): this;
+    get<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    post<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    put<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    delete<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    patch<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    head<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    options<Path extends `/${string}`>(...params: MethodParams<Path>): this;
 }
 
 export class Router {
     private cache = new Map<string, [Handler, object] | undefined>;
-    private routes = new Map<string, Handler>();
+    private routes = new Map<string, [Handler, boolean]>();
     private patterns: URLPattern[] = [];
     private middlewares: Middleware[] = [];
     private runner?: Runner = undefined;
@@ -29,7 +32,8 @@ export class Router {
         this.handle = this.handle.bind(this);
 
         for (const method of methods) {
-            this[method] = (path, handler) => this.add(method, path, handler as Handler);
+            this[method] = (path, handler, { cache = true } = {}) =>
+                this.add(method, path, handler as Handler, cache);
         }
     }
 
@@ -59,9 +63,14 @@ export class Router {
         };
     }
 
-    private add(method: string, path: string, handler: Handler) {
+    private add(
+        method: string,
+        path: string,
+        handler: Handler,
+        cache: boolean,
+    ) {
         const key = `${method} ${path}`;
-        this.routes.set(key, handler);
+        this.routes.set(key, [handler, cache]);
 
         if (!path.includes(":")) {
             this.cache.set(key, [handler, {}]);
@@ -94,15 +103,20 @@ export class Router {
         const { pathname } = pattern;
         const key = `${method} ${pathname}`;
 
-        const handler = this.routes.get(key);
+        const route = this.routes.get(key);
 
-        if (!handler) {
+        if (!route) {
             this.cache.set(cid, undefined);
             return undefined;
         }
 
         const params = pattern.exec({ pathname: path })?.pathname.groups ?? {};
-        this.cache.set(cid, [handler, params]);
+
+        const [handler, cache] = route;
+
+        if (cache) {
+            this.cache.set(cid, [handler, params]);
+        }
 
         return [handler, params] as const;
     }
