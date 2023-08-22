@@ -7,7 +7,8 @@ const router = new Router();
 router
     .get("/", () => {})
     .get("/json", () => ({ hello: "world" }))
-    .get("/params/:a/:b", ({ params }) => params);
+    .get("/params/:a/:b", ({ params }) => params)
+    .get("/wc/:param/*", ({ params }) => params)
 
 Deno.serve(router.handle);
 
@@ -32,5 +33,13 @@ Deno.test("Parameters parsed correctly", async () => {
     const body = await res.json();
 
     assertEquals(body, { a: "1", b: "2" });
+    assertEquals(res.status, 200);
+});
+
+Deno.test("Wildcard path with parameter", async () => {
+    const res = await fetch("http://localhost:8000/wc/1/2/3");
+    const body = await res.json();
+
+    assertEquals(body, { param: "1", 0: "2/3" });
     assertEquals(res.status, 200);
 });
