@@ -158,11 +158,11 @@ export class Router {
         }
         catch (error) {
             if (error instanceof ServerError) {
-                console.log(error.stack);
+                console.error(error.stack);
                 return error.response();
             }
 
-            console.log(error);
+            console.error(error);
             return new ServerError().response();
         }
     }
