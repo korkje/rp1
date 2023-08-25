@@ -8,7 +8,7 @@ router
     .get("/", () => {})
     .get("/json", () => ({ hello: "world" }))
     .get("/params/:a/:b", ({ params }) => params)
-    .get("/wc/:param/*", ({ params }) => params)
+    .get("/wc/:param/*", ({ params }) => params);
 
 Deno.serve(router.handle);
 
@@ -42,4 +42,12 @@ Deno.test("Wildcard path with parameter", async () => {
 
     assertEquals(body, { param: "1", 0: "2/3" });
     assertEquals(res.status, 200);
+});
+
+Deno.test("Only match if method matches", async () => {
+    const res = await fetch("http://localhost:8000/params/1/2", { method: "POST" });
+    const body = await res.text();
+
+    assertEquals(body, "");
+    assertEquals(res.status, 404);
 });

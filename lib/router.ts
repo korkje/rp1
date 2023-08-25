@@ -5,7 +5,7 @@ export type Handler<Path extends string = string> = (context: Context<Path>) => 
 export type Middleware = (context: Context, next: () => Promise<unknown>) => unknown | Promise<unknown>;
 export type Runner = (context: Context, handler: Handler) => ReturnType<Handler>;
 
-export const methods = ["get", "post", "put", "delete", "patch", "head", "options"] as const;
+export const methods = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"] as const;
 export const notFound: Handler = () => new Response(null, { status: 404 });
 
 export type MethodParams<Path extends `/${string}`> = [path: Path, handler: Handler<Path>];
@@ -18,12 +18,13 @@ export interface Router {
     patch<Path extends `/${string}`>(...params: MethodParams<Path>): this;
     head<Path extends `/${string}`>(...params: MethodParams<Path>): this;
     options<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    connect<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+    trace<Path extends `/${string}`>(...params: MethodParams<Path>): this;
 }
 
 export class Router {
-    private cache = new Map<string, [Handler, object] | undefined>;
-    private routes = new Map<string, Handler>();
-    private patterns: URLPattern[] = [];
+    private static: Record<string, Handler | undefined> = {};
+    private dynamic: Record<string, [URLPattern, Handler][] | undefined> = {};
     private middlewares: Middleware[] = [];
     private runner?: Runner = undefined;
 
@@ -32,6 +33,7 @@ export class Router {
 
         for (const method of methods) {
             this[method] = (path, handler) => this.add(method, path, handler);
+            this.dynamic[method] = [];
         }
     }
 
@@ -63,55 +65,32 @@ export class Router {
 
     private add(
         method: string,
-        path: string,
+        pathname: string,
         handler: Handler,
     ) {
-        const key = `${method} ${path}`;
-        this.routes.set(key, handler);
-
-        const dynamic = path.includes(":") || path.includes("*");
-
-        if (!dynamic) {
-            this.cache.set(key, [handler, {}]);
+        if (pathname.includes(":") || pathname.includes("*")) {
+            this.dynamic[method]?.push([new URLPattern({ pathname }), handler]);
         }
-
-        const pattern = new URLPattern({ pathname: path });
-        const exists = this.patterns.some(p => p.pathname === pattern.pathname);
-
-        if (!exists) {
-            this.patterns.push(pattern);
+        else {
+            this.static[`${method} ${pathname}`] = handler;
         }
 
         return this;
     }
 
-    private match(method: string, path: `/${string}`) {
-        const cid = `${method} ${path}`;
-
-        if (this.cache.has(cid)) {
-            return this.cache.get(cid);
-        }
-
-        const pattern = this.patterns.find(p => p.test({ pathname: path }));
-
-        if (!pattern) {
-            this.cache.set(cid, undefined);
-            return undefined;
-        }
-
-        const { pathname } = pattern;
+    private match(method: string, pathname: `/${string}`) {
         const key = `${method} ${pathname}`;
+        if (key in this.static) {
+            return [this.static[key]!, {}] as const;
+        }
 
-        const handler = this.routes.get(key);
-
-        if (!handler) {
-            this.cache.set(cid, undefined);
+        const route = this.dynamic[method]?.find(([p]) => p.test({ pathname }));
+        if (!route) {
             return undefined;
         }
 
-        const params = pattern.exec({ pathname: path })?.pathname.groups ?? {};
-
-        return [handler, params] as const;
+        const [pattern, handler] = route;
+        return [handler, pattern.exec({ pathname })?.pathname.groups ?? {}] as const;
     }
 
     public use(middleware: Middleware) {
@@ -152,9 +131,7 @@ export class Router {
                 return result.response();
             }
 
-            const { headers } = context.response;
-            const status = context.response.status === 204 ? 200 : context.response.status;
-            return Response.json(result, { status, headers });
+            return Response.json(result, { headers: context.response.headers });
         }
         catch (error) {
             if (error instanceof ServerError) {

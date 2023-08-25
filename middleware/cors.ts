@@ -78,7 +78,7 @@ export const cors = ({
         response.headers.set(Header.AccessControlAllowCredentials, "true");
     }
 
-    if (request.method !== "OPTIONS") {
+    if (request.method.toLowerCase() !== "options") {
         if (expose) {
             response.headers.set(Header.AccessControlExposeHeaders, array(expose).join(", "));
         }
