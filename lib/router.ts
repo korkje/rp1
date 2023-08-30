@@ -131,13 +131,13 @@ export class Router {
     }
 
     public async handle(request: Request, info: Deno.ServeHandlerInfo) {
-        const { pathname } = new URL(request.url);
-        const method = request.method.toLowerCase();
-        const [handler, params] = this.match(method, pathname as `/${string}`) ?? [notFound, {}];
-
-        const context = new Context(params, request, info);
-
         try {
+            const { pathname } = new URL(request.url);
+            const method = request.method.toLowerCase();
+            const [handler, params] = this.match(method, pathname as `/${string}`) ?? [notFound, {}];
+
+            const context = new Context(params, request, info);
+
             this.runner ??= this.compose();
             const result = await this.runner(context, handler);
 
