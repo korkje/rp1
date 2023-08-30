@@ -2,24 +2,22 @@ import Context from "./context.ts";
 import { ServerError } from "./error.ts";
 
 export type Handler<Path extends string = string> = (context: Context<Path>) => unknown | Promise<unknown>;
-export type Middleware = (context: Context, next: () => Promise<unknown>) => unknown | Promise<unknown>;
+export type Middleware<Path extends string = string> = (context: Context<Path>, next: () => Promise<unknown>) => unknown | Promise<unknown>;
 export type Runner = (context: Context, handler: Handler) => ReturnType<Handler>;
 
 export const methods = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"] as const;
 export const notFound: Handler = () => new Response(null, { status: 404 });
 
-export type MethodParams<Path extends `/${string}`> = [path: Path, handler: Handler<Path>];
+export type Route = <Path extends `/${string}`>(path: Path, handler: Handler<Path>) => Router;
+export type RouterMethods = { [Method in typeof methods[number]]: Route };
+// deno-lint-ignore no-empty-interface
+export interface Router extends RouterMethods {}
 
-export interface Router {
-    get<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    post<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    put<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    delete<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    patch<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    head<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    options<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    connect<Path extends `/${string}`>(...params: MethodParams<Path>): this;
-    trace<Path extends `/${string}`>(...params: MethodParams<Path>): this;
+export type SubRoute<Root extends string> = <Path extends `/${string}`>(path: Path, handler: Handler<`${Root}${Path}`>) => SubRouter<Root>;
+export type SubRouterMethods<Root extends string> = { [Method in typeof methods[number]]: SubRoute<Root> };
+export interface SubRouter<Root extends string> extends SubRouterMethods<Root> {
+    use(middleware: Middleware<Root>): SubRouter<Root>;
+    sub<SubRoot extends `/${string}`>(root: SubRoot): SubRouter<`${Root}${SubRoot}`>;
 }
 
 export class Router {
@@ -98,6 +96,38 @@ export class Router {
         this.runner = undefined;
 
         return this;
+    }
+
+    public sub<Root extends `/${string}`>(root: Root) {
+        const subRouter = {} as SubRouter<Root>;
+
+        for (const method of methods) {
+            subRouter[method] = (path, handler) => {
+                this.add(method, `${root}${path}`, handler);
+                return subRouter;
+            }
+        }
+
+        const pattern = new URLPattern({ pathname: root + "/*?" });
+
+        subRouter.use = middleware => {
+            this.use((context, next) => {
+                const { pathname } = new URL(context.request.url);
+
+                if (pattern.test({ pathname })) {
+                    return middleware(context, next);
+                }
+
+                return next();
+            });
+
+            return subRouter;
+        };
+
+        // @ts-ignore: `${Root}${SubRoot}` _is_ assignable to `/${string}`
+        subRouter.sub = subRoot => this.sub(`${root}${subRoot}`);
+
+        return subRouter;
     }
 
     public async handle(request: Request, info: Deno.ServeHandlerInfo) {

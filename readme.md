@@ -1,4 +1,5 @@
 # rp1 🚀
+
 Blazingly fast and simple web framework for Deno, suitably named after the [rocket fuel](https://en.wikipedia.org/wiki/RP-1).
 
 ```ts
@@ -17,7 +18,7 @@ Generates JSON for [serializable](https://www.json.org/json-en.html) values.
 
 ```ts
 // '{ "data": [1, 2, 3] }' with a 200 status code
-router.get("/json", () => { data: [1, 2, 3] });
+router.get("/json", () => ({ data: [1, 2, 3] }));
 ```
 
 Infers parameters from the path.
@@ -88,7 +89,7 @@ router.use(cors({
     skip: ({ request }) => {
         const url = new URL(request.url);
         return url.pathname.startsWith("/public/");
-    }, 
+    },
     origin: echo,
     methods: ["GET", "POST"],
     headers: "Content-Type",
@@ -96,12 +97,20 @@ router.use(cors({
 }));
 ```
 
-Uses native `Request` object, so WebSockets are supported out of the box.
+Supports sub-routes.
+
+```ts
+router.sub("/stats")
+    .get("/users", () => users.length) // GET /stats/users
+    .get("/posts", () => posts.length); // GET /stats/posts
+```
+
+Uses Deno's native `Request` object, so WebSockets are supported out of the box.
 
 ```ts
 router.get("/ws", ({ request }) => {
     const { socket, response } = Deno.upgradeWebSocket(request);
-    
+
     socket.onopen = () => {
         console.log("Socket opened!");
     };

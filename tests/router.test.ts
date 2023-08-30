@@ -10,6 +10,16 @@ router
     .get("/params/:a/:b", ({ params }) => params)
     .get("/wc/:param/*", ({ params }) => params);
 
+router.sub("/sub")
+    .get("/hello", () => "hello")
+    .get("/*?", ({ params }) => params);
+
+router.sub("/sub2/:param")
+    .get("/:param2", ({ params }) => params);
+
+router.sub("/sub3").sub("/sub4")
+    .get("/hello", () => "hello");
+
 Deno.serve(router.handle);
 
 Deno.test("Simple empty response", async () => {
@@ -50,4 +60,42 @@ Deno.test("Only match if method matches", async () => {
 
     assertEquals(body, "");
     assertEquals(res.status, 404);
+});
+
+Deno.test("Subrouter", async () => {
+    const res = await fetch("http://localhost:8000/sub/hello");
+    const body = await res.json();
+
+    assertEquals(body, "hello");
+    assertEquals(res.status, 200);
+});
+
+Deno.test("Subrouter wildcard", async () => {
+    const res = await fetch("http://localhost:8000/sub/hello/world");
+    const body = await res.json();
+
+    assertEquals(body, { 0: "hello/world" });
+    assertEquals(res.status, 200);
+
+    const res2 = await fetch("http://localhost:8000/sub");
+    const body2 = await res2.json();
+
+    assertEquals(body2, { 0: "" });
+    assertEquals(res2.status, 200);
+});
+
+Deno.test("Subrouter parameters", async () => {
+    const res = await fetch("http://localhost:8000/sub2/1/2");
+    const body = await res.json();
+
+    assertEquals(body, { param: "1", param2: "2" });
+    assertEquals(res.status, 200);
+});
+
+Deno.test("Sub-subrouter", async () => {
+    const res = await fetch("http://localhost:8000/sub3/sub4/hello");
+    const body = await res.json();
+
+    assertEquals(body, "hello");
+    assertEquals(res.status, 200);
 });

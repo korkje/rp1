@@ -86,3 +86,24 @@ Deno.test("Handler result propagates", async () => {
     const test = res.headers.get("X-Test");
     assertEquals(test, "1, 2, 3, result, 4, 5, 6");
 });
+
+Deno.test("Subrouter middleware", async () => {
+    router.sub("/sub")
+        .use(async ({ response }, next) => {
+            response.headers.append("X-Sub", "true");
+            await next();
+        })
+        .get("/*?", () => "sub");
+
+    const res = await fetch("http://localhost:8000/sub");
+
+    assertEquals(await res.json(), "sub");
+    assertEquals(res.headers.get("X-Sub"), "true");
+
+    router.get("/noSub", () => "noSub");
+
+    const res2 = await fetch("http://localhost:8000/noSub");
+
+    assertEquals(await res2.json(), "noSub");
+    assertEquals(res2.headers.get("X-Sub"), null);
+});
