@@ -1,23 +1,60 @@
 import Context from "./context.ts";
 import { ServerError } from "./error.ts";
 
-export type Handler<Path extends string = string> = (context: Context<Path>) => unknown | Promise<unknown>;
-export type Middleware<Path extends string = string> = (context: Context<Path>, next: () => Promise<unknown>) => unknown | Promise<unknown>;
-export type Runner = (context: Context, handler: Handler) => ReturnType<Handler>;
+export type Handler<Path extends string = string> =
+    (context: Context<Path>) => unknown | Promise<unknown>;
+export type Middleware<Path extends string = string> =
+    (context: Context<Path>, next: () => Promise<unknown>) => unknown | Promise<unknown>;
+export type Runner =
+    (context: Context, handler: Handler) => ReturnType<Handler>;
 
 export const methods = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"] as const;
 export const notFound: Handler = () => new Response(null, { status: 404 });
 
-export type Route = <Path extends `/${string}`>(path: Path, handler: Handler<Path>) => Router;
+export type Route = <Path extends `/${string}`>
+    (path: Path, handler: Handler<Path>, middlewares?: Middleware[]) => Router;
 export type RouterMethods = { [Method in typeof methods[number]]: Route };
 // deno-lint-ignore no-empty-interface
 export interface Router extends RouterMethods {}
 
-export type SubRoute<Root extends string> = <Path extends `/${string}`>(path: Path, handler: Handler<`${Root}${Path}`>) => SubRouter<Root>;
+export type SubRoute<Root extends string> = <Path extends `/${string}`>
+    (path: Path, handler: Handler<`${Root}${Path}`>, middlewares?: Middleware<`${Root}${Path}`>[]) => SubRouter<Root>;
 export type SubRouterMethods<Root extends string> = { [Method in typeof methods[number]]: SubRoute<Root> };
 export interface SubRouter<Root extends string> extends SubRouterMethods<Root> {
     use(middleware: Middleware<Root>): SubRouter<Root>;
     sub<SubRoot extends `/${string}`>(root: SubRoot): SubRouter<`${Root}${SubRoot}`>;
+}
+
+export function composeRunner(middlewares: Middleware[]): Runner {
+    return async (context, handler) => {
+        let i = 0;
+        let result: unknown;
+
+        const next = async () => {
+            const middleware = middlewares[i++];
+
+            if (middleware) {
+                await middleware(context, next);
+            }
+            else {
+                result = await handler(context);
+            }
+
+            return result;
+        };
+
+        return await next();
+    };
+}
+
+export function composeHandler(handler: Handler, middlewares?: Middleware[]): Handler {
+    if (middlewares === undefined) {
+        return handler;
+    }
+
+    const runner = composeRunner(middlewares);
+
+    return async context => await runner(context, handler);
 }
 
 export class Router {
@@ -30,50 +67,24 @@ export class Router {
         this.handle = this.handle.bind(this);
 
         for (const method of methods) {
-            this[method] = (path, handler) => this.add(method, path, handler);
+            this[method] = this.add(method);
             this.dynamic[method] = [];
         }
     }
 
-    private compose(): Runner {
-        if (this.middlewares.length === 0) {
-            return async (context, handler) => await handler(context);
-        }
+    private add(method: string) {
+        return (pathname: string, handler: Handler, middlewares?: Middleware[]) => {
+            handler = composeHandler(handler, middlewares);
 
-        return async (context, handler) => {
-            let i = 0;
-            let result: unknown;
+            if (pathname.includes(":") || pathname.includes("*")) {
+                this.dynamic[method]?.push([new URLPattern({ pathname }), handler]);
+            }
+            else {
+                this.static[`${method} ${pathname}`] = handler;
+            }
 
-            const next = async () => {
-                const middleware = this.middlewares[i++];
-
-                if (middleware) {
-                    await middleware(context, next);
-                }
-                else {
-                    result = await handler(context);
-                }
-
-                return result;
-            };
-
-            return await next();
+            return this;
         };
-    }
-
-    private add(
-        method: string,
-        pathname: string,
-        handler: Handler,
-    ) {
-        if (pathname.includes(":") || pathname.includes("*")) {
-            this.dynamic[method]?.push([new URLPattern({ pathname }), handler]);
-        }
-        else {
-            this.static[`${method} ${pathname}`] = handler;
-        }
-
-        return this;
     }
 
     private match(method: string, pathname: `/${string}`) {
@@ -100,27 +111,18 @@ export class Router {
 
     public sub<Root extends `/${string}`>(root: Root) {
         const subRouter = {} as SubRouter<Root>;
+        const subMiddlewares: Middleware<Root>[] = [];
 
         for (const method of methods) {
-            subRouter[method] = (path, handler) => {
-                this.add(method, `${root}${path}`, handler);
+            subRouter[method] = (path, handler, middlewares) => {
+                handler = composeHandler(handler, subMiddlewares);
+                this.add(method)(`${root}${path}`, handler, middlewares);
                 return subRouter;
             }
         }
 
-        const pattern = new URLPattern({ pathname: root + "/*?" });
-
         subRouter.use = middleware => {
-            this.use((context, next) => {
-                const { pathname } = new URL(context.request.url);
-
-                if (pattern.test({ pathname })) {
-                    return middleware(context, next);
-                }
-
-                return next();
-            });
-
+            subMiddlewares.push(middleware);
             return subRouter;
         };
 
@@ -138,7 +140,7 @@ export class Router {
 
             const context = new Context(params, request, info);
 
-            this.runner ??= this.compose();
+            this.runner ??= composeRunner(this.middlewares);
             const result = await this.runner(context, handler);
 
             if (result === undefined) {
