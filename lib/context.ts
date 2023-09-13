@@ -5,7 +5,7 @@ export class Context<Path extends string = string> {
     public response: Response;
 
     constructor(
-        public params: Record<Params<Path>, string> & URLPatternResult["pathname"]["groups"],
+        public params: { [key in Params<Path>]: string } & URLPatternComponentResult["groups"],
         public request: Request,
         public info: Deno.ServeHandlerInfo,
     ) {

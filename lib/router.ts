@@ -12,7 +12,7 @@ export const methods = ["get", "post", "put", "delete", "patch", "head", "option
 export const notFound: Handler = () => new Response(null, { status: 404 });
 
 export type Route = <Path extends `/${string}`>
-    (path: Path, handler: Handler<Path>, middlewares?: Middleware[]) => Router;
+    (path: Path, handler: Handler<Path>, middlewares?: Middleware<Path>[]) => Router;
 export type RouterMethods = { [Method in typeof methods[number]]: Route };
 // deno-lint-ignore no-empty-interface
 export interface Router extends RouterMethods {}

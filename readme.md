@@ -21,12 +21,18 @@ Generates JSON for [serializable](https://www.json.org/json-en.html) values.
 router.get("/json", () => ({ data: [1, 2, 3] }));
 ```
 
-Infers parameters from the path.
+Infers parameters from the path, which is matched using [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API).
 
 ```ts
 // 'params' is of type { id: string }
 router.get("/users/:id", ({ params }) => {
     const id = params.id;
+    // ...
+});
+
+// 'params' is of type { name: string, ext: string }
+router.post("/files/:name(.+).:ext(\\w+)", ({ params }) => {
+    const { name, ext } = params;
     // ...
 });
 ```
