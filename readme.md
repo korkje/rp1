@@ -14,13 +14,6 @@ Deno.serve(router.handle);
 
 ## Features
 
-Generates JSON for [serializable](https://www.json.org/json-en.html) values.
-
-```ts
-// '{ "data": [1, 2, 3] }' with a 200 status code
-router.get("/json", () => ({ data: [1, 2, 3] }));
-```
-
 Infers parameters from the path, which is matched using [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API).
 
 ```ts
@@ -55,11 +48,26 @@ router.post("/cash", () => {
 });
 ```
 
-You can return `Response` objects.
+Generates JSON for [serializable](https://www.json.org/json-en.html) values returned from handlers.
+
+```ts
+// '{ "data": [1, 2, 3] }' with a 200 status code
+router.get("/json", () => ({ data: [1, 2, 3] }));
+```
+
+You can return `Response` objects. Note: headers already set on the the context's `response` object (e.g. by cors middleware) will be appended to the returned `Response` object's headers.
 
 ```ts
 // 'Hello World!'
 router.get("/hello", () => new Response("Hello World!"));
+
+// 'Hello World!' with header
+router.get("/hello", ({ response }) => {
+    response.headers.set("X-Greeting", "Hello World!");
+    // Will be appended to the returned Response object's headers
+
+    return new Response("Hello World!");
+});
 ```
 
 Easy to use middleware.

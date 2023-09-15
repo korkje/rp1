@@ -11,8 +11,8 @@ export type Runner =
 export const methods = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"] as const;
 export const notFound: Handler = () => new Response(null, { status: 404 });
 
-export type Route = <Path extends `/${string}`, H extends Handler<Path>, M extends Middleware<Path>>
-    (path: Path, handler: H, middlewares?: M[]) => Router;
+export type Route = <Path extends `/${string}`>
+    (path: Path, handler: Handler<`${Path}`>, middlewares?: Middleware<`${Path}`>[]) => Router;
 export type RouterMethods = { [Method in typeof methods[number]]: Route };
 // deno-lint-ignore no-empty-interface
 export interface Router extends RouterMethods {}
@@ -147,17 +147,15 @@ export class Router {
                 return context.response;
             }
             else if (result instanceof Response) {
-                const { status, headers, body } = result;
-
-                if (status === 101) {
+                if (result.status === 101) {
                     return result;
                 }
 
-                for (const [key, value] of headers.entries()) {
-                    context.response.headers.set(key, value);
+                for (const [key, value] of context.response.headers.entries()) {
+                    result.headers.append(key, value);
                 }
 
-                return new Response(body, { status, headers: context.response.headers });
+                return result;
             }
             else if (result instanceof ServerError) {
                 return result.response();
