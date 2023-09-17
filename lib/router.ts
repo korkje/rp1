@@ -76,7 +76,7 @@ export class Router {
         return (pathname: string, handler: Handler, middlewares?: Middleware[]) => {
             handler = composeHandler(handler, middlewares);
 
-            if (pathname.includes(":") || pathname.includes("*")) {
+            if (/[:*?(){}]/.test(pathname)) {
                 this.dynamic[method]?.push([new URLPattern({ pathname }), handler]);
             }
             else {
