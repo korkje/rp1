@@ -18,9 +18,9 @@ router.get("/ws", ({ request }) => {
     return response;
 });
 
-Deno.serve(router.handle);
-
 Deno.test("WebSocket", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const ws = new WebSocket("ws://localhost:8000/ws");
 
     const openPromise = new Promise(resolve => {
@@ -62,6 +62,8 @@ Deno.test("WebSocket", async () => {
     await echoPromise;
 
     ws.close();
+
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     assertEquals(count, 10);
 });

@@ -1,16 +1,18 @@
 import { assertEquals } from "./deps.ts";
 import cors, { echo } from "../middleware/cors.ts";
 import Router from "../lib/router.ts";
+import { error } from "../mod.ts";
 
 const router = new Router();
 
 router.use(cors({ origins: echo, expose: "Content-Type" }));
 
 router.post("/post", () => {});
-
-Deno.serve(router.handle);
+router.get("/get_error", () => error(404, "Not found"));
 
 Deno.test("Headers set correctly for OPTIONS request", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/post", {
         method: "OPTIONS",
         headers: {
@@ -26,6 +28,8 @@ Deno.test("Headers set correctly for OPTIONS request", async () => {
 });
 
 Deno.test("Headers set correctly for POST request", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/post", {
         method: "POST",
         headers: {
@@ -40,7 +44,20 @@ Deno.test("Headers set correctly for POST request", async () => {
 });
 
 Deno.test("Correct behaviour for non-existent routes", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000");
+
+    res.body?.cancel();
+
+    assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*");
+    assertEquals(res.headers.get("Access-Control-Allow-Headers"), null);
+});
+
+Deno.test("CORS works on errors", async () => {
+    await using _ = Deno.serve(router.handle);
+
+    const res = await fetch("http://localhost:8000/get_error");
 
     res.body?.cancel();
 

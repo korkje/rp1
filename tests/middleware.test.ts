@@ -30,9 +30,9 @@ router.use(async ({ response }, next) => {
     response.headers.append("X-Test", "4");
 });
 
-Deno.serve(router.handle);
-
 Deno.test("Middleware ordering", async () => {
+    await using _ = Deno.serve(router.handle);
+
     let called = false;
     router.get("/", () => called = true);
 
@@ -46,6 +46,8 @@ Deno.test("Middleware ordering", async () => {
 });
 
 Deno.test("Middleware skip", async () => {
+    await using _ = Deno.serve(router.handle);
+
     let called = false;
     router.get("/skip", () => called = true);
 
@@ -59,6 +61,8 @@ Deno.test("Middleware skip", async () => {
 });
 
 Deno.test("Middleware error", async () => {
+    await using _ = Deno.serve(router.handle);
+
     let called = false;
     router.get("/throw", () => called = true);
 
@@ -74,6 +78,8 @@ Deno.test("Middleware error", async () => {
 });
 
 Deno.test("Handler result propagates", async () => {
+    await using _ = Deno.serve(router.handle);
+
     router.get("/result", ({ response }) => {
         response.headers.append("X-Test", "result");
         return "result";
@@ -88,6 +94,8 @@ Deno.test("Handler result propagates", async () => {
 });
 
 Deno.test("Subrouter middleware", async () => {
+    await using _ = Deno.serve(router.handle);
+
     router.sub("/sub")
         .use(async ({ response }, next) => {
             response.headers.append("X-Sub", "true");
