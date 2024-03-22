@@ -16,9 +16,9 @@ router.get("/stack", () => {
     throw new ServerError(500, "Stack included", true);
 });
 
-Deno.serve(router.handle);
-
 Deno.test("Regular Error leads to 500", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/native");
     assertEquals(res.status, 500);
 
@@ -30,6 +30,8 @@ Deno.test("Regular Error leads to 500", async () => {
 });
 
 Deno.test("ServerError is correctly serialized", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/custom");
     assertEquals(res.status, 402);
 
@@ -41,6 +43,8 @@ Deno.test("ServerError is correctly serialized", async () => {
 });
 
 Deno.test("Stack is included", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/stack");
     assertEquals(res.status, 500);
 

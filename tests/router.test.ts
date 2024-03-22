@@ -20,9 +20,9 @@ router.sub("/sub2/:param")
 router.sub("/sub3").sub("/sub4")
     .get("/hello", () => "hello");
 
-Deno.serve(router.handle);
-
 Deno.test("Simple empty response", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000");
     const body = await res.text();
 
@@ -31,6 +31,8 @@ Deno.test("Simple empty response", async () => {
 });
 
 Deno.test("Simple JSON response", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/json");
     const body = await res.json();
 
@@ -39,6 +41,8 @@ Deno.test("Simple JSON response", async () => {
 });
 
 Deno.test("Parameters parsed correctly", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/params/1/2");
     const body = await res.json();
 
@@ -47,6 +51,8 @@ Deno.test("Parameters parsed correctly", async () => {
 });
 
 Deno.test("Wildcard path with parameter", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/wc/1/2/3");
     const body = await res.json();
 
@@ -55,6 +61,8 @@ Deno.test("Wildcard path with parameter", async () => {
 });
 
 Deno.test("Only match if method matches", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/params/1/2", { method: "POST" });
     const body = await res.text();
 
@@ -63,6 +71,8 @@ Deno.test("Only match if method matches", async () => {
 });
 
 Deno.test("Subrouter", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/sub/hello");
     const body = await res.json();
 
@@ -71,6 +81,8 @@ Deno.test("Subrouter", async () => {
 });
 
 Deno.test("Subrouter wildcard", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/sub/hello/world");
     const body = await res.json();
 
@@ -85,6 +97,8 @@ Deno.test("Subrouter wildcard", async () => {
 });
 
 Deno.test("Subrouter parameters", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/sub2/1/2");
     const body = await res.json();
 
@@ -93,6 +107,8 @@ Deno.test("Subrouter parameters", async () => {
 });
 
 Deno.test("Sub-subrouter", async () => {
+    await using _ = Deno.serve(router.handle);
+
     const res = await fetch("http://localhost:8000/sub3/sub4/hello");
     const body = await res.json();
 
