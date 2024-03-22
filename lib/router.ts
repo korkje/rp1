@@ -158,7 +158,13 @@ export class Router {
                 return result;
             }
             else if (result instanceof ServerError) {
-                return result.response();
+                const response = result.response();
+
+                for (const [key, value] of context.response.headers.entries()) {
+                    response.headers.append(key, value);
+                }
+
+                return response;
             }
 
             return Response.json(result, { headers: context.response.headers });
