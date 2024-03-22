@@ -7,18 +7,18 @@ export type Size<T extends unknown[]> = T['length'];
 
 export type IfEmpty<Path extends string, Then, Else> = Path extends "" ? Then : Else;
 
-export type RemoveNonCapturingGroups<Path extends string> =
-    Path extends `${infer Head}}${infer Tail}`
-    ? Head extends `${string}\\`
-        ? RemoveNonCapturingGroups<`${Head}#${Tail}`>
-        : Tail extends `*${infer Tail2}`
-            ? RemoveNonCapturingGroups<`${Head}#${Tail2}`>
-            : RemoveNonCapturingGroups<`${Head}#${Tail}`>
-    : Path extends `${infer Head}{${infer Tail}`
-        ? Head extends `${string}\\`
-            ? RemoveNonCapturingGroups<`${Head}#${Tail}`>
-            : RemoveNonCapturingGroups<`${Head}#${Tail}`>
-        : Path;
+// export type RemoveNonCapturingGroups<Path extends string> =
+//     Path extends `${infer Head}}${infer Tail}`
+//     ? Head extends `${string}\\`
+//         ? RemoveNonCapturingGroups<`${Head}#${Tail}`>
+//         : Tail extends `*${infer Tail2}`
+//             ? RemoveNonCapturingGroups<`${Head}#${Tail2}`>
+//             : RemoveNonCapturingGroups<`${Head}#${Tail}`>
+//     : Path extends `${infer Head}{${infer Tail}`
+//         ? Head extends `${string}\\`
+//             ? RemoveNonCapturingGroups<`${Head}#${Tail}`>
+//             : RemoveNonCapturingGroups<`${Head}#${Tail}`>
+//         : Path;
 
 export type RemoveGroup<Path extends string, Counter extends unknown[] = [unknown]> =
     Size<Counter> extends 0 ? Path extends `*${infer Rest}` ? Rest : Path :
@@ -33,7 +33,8 @@ export type RemoveGroups<Path extends string> =
     ? Head extends `${string}\\`
         ? RemoveGroups<`${Head}#${Tail}`>
         : RemoveGroups<`${Head}#${RemoveGroup<Tail>}`>
-    : RemoveNonCapturingGroups<Path>;
+    : Path;
+    // : RemoveNonCapturingGroups<Path>;
 
 export type CountGroups<Path extends string, Params extends string, Counter extends unknown[] = []> =
     Path extends `${infer Head}(${infer Tail}`
