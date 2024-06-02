@@ -1,0 +1,14 @@
+{
+    "name": "@korkje/rp1",
+    "version": "0.0.0",
+    "exports": {
+        ".": "./mod.ts",
+        "./router": "./lib/router.ts",
+        "./error": "./lib/error.ts",
+        "./middleware/cors": "./middleware/cors.ts"
+    },
+    "lock": false,
+    "imports": {
+        "@std/assert": "jsr:@std/assert@^0.225.3"
+    }
+}

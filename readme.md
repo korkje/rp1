@@ -1,9 +1,9 @@
-# rp1 🚀
+# rp1 🚀 [![JSR](https://jsr.io/badges/@korkje/rp1)](https://jsr.io/@korkje/rp1)
 
 Blazingly fast and simple web framework for Deno, suitably named after the [rocket fuel](https://en.wikipedia.org/wiki/RP-1).
 
 ```ts
-import Router from "https://deno.land/x/rp1/mod.ts";
+import Router from "jsr:@korkje/rp1";
 
 const router = new Router();
 
@@ -33,7 +33,7 @@ router.post("/files/:name(.+).:ext(\\w+)", ({ params }) => {
 Sane error handling. Thrown errors are logged (`console.error`), returned errors are not. Both get serialized to JSON. Optionally include stack trace.
 
 ```ts
-import { error } from "https://deno.land/x/rp1/mod.ts";
+import { error } from "jsr:@korkje/rp1";
 
 // '{ "status": 418, "message": "I'm a teapot" }'
 router.get("/coffee", () => {
@@ -88,7 +88,7 @@ router.use(async ({ request }, next) => {
 CORS middleware included.
 
 ```ts
-import cors from "https://deno.land/x/rp1/middleware/cors.ts";
+import { cors } from "jsr:@korkje/rp1";
 
 router.use(cors());
 ```
@@ -96,7 +96,7 @@ router.use(cors());
 ...which is easily configurable.
 
 ```ts
-import cors, { echo } from "https://deno.land/x/rp1/middleware/cors.ts";
+import cors, { echo } from "jsr:@korkje/rp1/middleware/cors";
 
 router.use(cors({
     // Skip CORS for public paths

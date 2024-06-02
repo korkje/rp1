@@ -14,7 +14,6 @@ export const notFound: Handler = () => new Response(null, { status: 404 });
 export type Route = <Path extends `/${string}`>
     (path: Path, handler: Handler<`${Path}`>, middlewares?: Middleware<`${Path}`>[]) => Router;
 export type RouterMethods = { [Method in typeof methods[number]]: Route };
-// deno-lint-ignore no-empty-interface
 export interface Router extends RouterMethods {}
 
 export type SubRoute<Root extends string> = <Path extends `/${string}`>
@@ -57,6 +56,9 @@ export function composeHandler(handler: Handler, middlewares?: Middleware[]): Ha
     return async context => await runner(context, handler);
 }
 
+/**
+ * Class that handles routing and middleware.
+ */
 export class Router {
     private static: Record<string, Handler | undefined> = {};
     private dynamic: Record<string, [URLPattern, Handler][] | undefined> = {};
@@ -67,7 +69,7 @@ export class Router {
         this.handle = this.handle.bind(this);
 
         for (const method of methods) {
-            this[method] = this.add(method);
+            this[method] = this.add(method) as Route;
             this.dynamic[method] = [];
         }
     }
@@ -102,23 +104,26 @@ export class Router {
         return [handler, pattern.exec({ pathname })?.pathname.groups ?? {}] as const;
     }
 
-    public use(middleware: Middleware) {
+    public use(middleware: Middleware): this {
         this.middlewares.push(middleware);
         this.runner = undefined;
 
         return this;
     }
 
-    public sub<Root extends `/${string}`>(root: Root) {
+    public sub<Root extends `/${string}`>(root: Root): SubRouter<Root> {
         const subRouter = {} as SubRouter<Root>;
         const subMiddlewares: Middleware<Root>[] = [];
 
         for (const method of methods) {
             subRouter[method] = (path, handler, middlewares) => {
-                handler = composeHandler(handler, subMiddlewares);
-                this.add(method)(`${root}${path}`, handler, middlewares);
+                this.add(method)(
+                    `${root}${path}`,
+                    composeHandler(handler as Handler, subMiddlewares as Middleware[]),
+                    middlewares as Middleware[],
+                );
                 return subRouter;
-            }
+            };
         }
 
         subRouter.use = middleware => {
@@ -132,7 +137,7 @@ export class Router {
         return subRouter;
     }
 
-    public async handle(request: Request, info: Deno.ServeHandlerInfo) {
+    public async handle(request: Request, info: Deno.ServeHandlerInfo): Promise<Response> {
         try {
             const { pathname } = new URL(request.url);
             const method = request.method.toLowerCase();

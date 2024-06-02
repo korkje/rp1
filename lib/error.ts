@@ -15,16 +15,16 @@ export class ServerError extends Error {
         this.exposed = expose;
     }
 
-    public toString() {
+    public toString(): string {
         return `${this.name}: ${this.message}`;
     }
 
-    public expose(expose?: boolean) {
+    public expose(expose?: boolean): this {
         this.exposed = expose ?? true;
         return this;
     }
 
-    public response() {
+    public response(): Response {
         const { status, message, exposed, stack } = this;
 
         const data = {
@@ -38,6 +38,12 @@ export class ServerError extends Error {
     }
 }
 
-export const error = (...params: ServerErrorParams) => new ServerError(...params);
+/**
+ * Creates a new ServerError instance.
+ *
+ * @param params - Parameters for the ServerError instance.
+ * @returns
+ */
+export const error = (...params: ServerErrorParams): ServerError => new ServerError(...params);
 
 export default error;

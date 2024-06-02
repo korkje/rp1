@@ -1,4 +1,4 @@
-import { assertEquals } from "./deps.ts";
+import { assertEquals } from "@std/assert";
 import cors, { echo } from "../middleware/cors.ts";
 import Router from "../lib/router.ts";
 import { error } from "../mod.ts";

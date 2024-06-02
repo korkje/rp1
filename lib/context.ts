@@ -1,5 +1,5 @@
-import { ServerError, ServerErrorParams } from "./error.ts";
-import Params from "./params.ts";
+import { ServerError, type ServerErrorParams } from "./error.ts";
+import type Params from "./params.ts";
 
 export class Context<Path extends string = string> {
     public response: Response;

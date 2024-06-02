@@ -1,4 +1,4 @@
-import { assertEquals } from "./deps.ts";
+import { assertEquals } from "@std/assert";
 import Router from "../lib/router.ts";
 import error from "../lib/error.ts";
 

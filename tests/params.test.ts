@@ -1,4 +1,4 @@
-import { Params } from "../lib/params.ts";
+import type { Params } from "../lib/params.ts";
 
 type AssertEq<T, U> =
     (<V>() => V extends T ? 1 : 2) extends

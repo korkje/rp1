@@ -1,5 +1,5 @@
-import Context from "../lib/context.ts";
-import { Middleware } from "../lib/router.ts";
+import type Context from "../lib/context.ts";
+import type { Middleware } from "../lib/router.ts";
 
 export const echo = Symbol("echo");
 export type Echo = typeof echo;
@@ -30,6 +30,9 @@ export type CORSOptions = {
     maxAge?: number;
 };
 
+/**
+ * Creates CORS middleware.
+ */
 export const cors = ({
     skip = () => false,
     origins = "*",
