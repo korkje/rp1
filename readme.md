@@ -1,5 +1,5 @@
 # rp1 🚀
-[![JSR](https://jsr.io/badges/@korkje/wsi)](https://jsr.io/@korkje/wsi)
+[![JSR](https://jsr.io/badges/@korkje/rp1)](https://jsr.io/@korkje/rp1)
 
 Blazingly fast and simple web framework for Deno, suitably named after the [rocket fuel](https://en.wikipedia.org/wiki/RP-1).
 
