@@ -1,6 +1,9 @@
-import { ServerError, type ServerErrorParams } from "./error.ts";
-import type Params from "./params.ts";
+import { ServerError, type ServerErrorParams } from "lib/error.ts";
+import type Params from "lib/params.ts";
 
+/**
+ * Class that represents the context of a request.
+ */
 export class Context<Path extends string = string> {
     public response: Response;
 

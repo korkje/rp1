@@ -1,11 +1,11 @@
-export type Delim = "!" | "\"" | "#" /*| "$" */| "%" | "&" | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" /*| "_" */| "`" | "{" | "|" | "}" | "~";
+type Delim = "!" | "\"" | "#" /*| "$" */| "%" | "&" | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" /*| "_" */| "`" | "{" | "|" | "}" | "~";
 
-export type Add<List extends unknown[], Item = unknown> = [...List, Item];
-export type Increment<Counter extends unknown[]> = [...Counter, unknown];
-export type Decrement<Counter extends unknown[]> = Counter extends [unknown, ...infer Rest] ? Rest : Counter;
-export type Size<T extends unknown[]> = T['length'];
+type Add<List extends unknown[], Item = unknown> = [...List, Item];
+type Increment<Counter extends unknown[]> = [...Counter, unknown];
+type Decrement<Counter extends unknown[]> = Counter extends [unknown, ...infer Rest] ? Rest : Counter;
+type Size<T extends unknown[]> = T['length'];
 
-export type IfEmpty<Path extends string, Then, Else> = Path extends "" ? Then : Else;
+type IfEmpty<Path extends string, Then, Else> = Path extends "" ? Then : Else;
 
 // export type RemoveNonCapturingGroups<Path extends string> =
 //     Path extends `${infer Head}}${infer Tail}`
@@ -20,7 +20,7 @@ export type IfEmpty<Path extends string, Then, Else> = Path extends "" ? Then : 
 //             : RemoveNonCapturingGroups<`${Head}#${Tail}`>
 //         : Path;
 
-export type RemoveGroup<Path extends string, Counter extends unknown[] = [unknown]> =
+type RemoveGroup<Path extends string, Counter extends unknown[] = [unknown]> =
     Size<Counter> extends 0 ? Path extends `*${infer Rest}` ? Rest : Path :
     Path extends `(${infer Rest}` ? RemoveGroup<Rest, Increment<Counter>> :
     Path extends `)${infer Rest}` ? RemoveGroup<Rest, Decrement<Counter>> :
@@ -28,7 +28,7 @@ export type RemoveGroup<Path extends string, Counter extends unknown[] = [unknow
     Path extends `${string}${infer Rest}` ? IfEmpty<Rest, Path, RemoveGroup<Rest, Counter>> :
     never;
 
-export type RemoveGroups<Path extends string> =
+type RemoveGroups<Path extends string> =
     Path extends `${infer Head}(${infer Tail}`
     ? Head extends `${string}\\`
         ? RemoveGroups<`${Head}#${Tail}`>
@@ -36,7 +36,7 @@ export type RemoveGroups<Path extends string> =
     : Path;
     // : RemoveNonCapturingGroups<Path>;
 
-export type CountGroups<Path extends string, Params extends string, Counter extends unknown[] = []> =
+type CountGroups<Path extends string, Params extends string, Counter extends unknown[] = []> =
     Path extends `${infer Head}(${infer Tail}`
     ? Head extends `${string}\\`
         ? CountGroups<Tail, Params, Counter>
@@ -45,12 +45,12 @@ export type CountGroups<Path extends string, Params extends string, Counter exte
             : CountGroups<RemoveGroup<Tail>, Params, Add<Counter, Size<Counter>>>
     : Counter;
 
-export type CleanParam<Param extends string> =
+type CleanParam<Param extends string> =
     Param extends `${infer Cleaned}${Delim}${string}`
     ? CleanParam<Cleaned>
     : Param;
 
-export type ExtractParams<Path extends string> =
+type ExtractParams<Path extends string> =
     Path extends `${infer Head}:${infer Param}:${infer Tail}`
     ? Head extends `${string}\\`
         ? ExtractParams<`:${Tail}`>
@@ -61,7 +61,7 @@ export type ExtractParams<Path extends string> =
             : CleanParam<Param>
         : never;
 
-export type CountWildcards<Path extends string, Params extends string, Counter extends unknown[] = []> =
+type CountWildcards<Path extends string, Params extends string, Counter extends unknown[] = []> =
     Path extends `${infer Head}**${infer Tail}`
     ? CountWildcards<`${Head}${Tail}`, Params, Add<Counter, Size<Counter>>>
     : Path extends `${infer Head}*${infer Tail}`
@@ -70,9 +70,12 @@ export type CountWildcards<Path extends string, Params extends string, Counter e
             : CountWildcards<`${Head}${Tail}`, Params, Add<Counter, Size<Counter>>>
         : Counter;
 
-export type AddNumbers<Path extends string, Params extends string> =
+type AddNumbers<Path extends string, Params extends string> =
     Params | CountWildcards<RemoveGroups<Path>, Params, CountGroups<Path, Params>>[number];
 
+/**
+ * Extracts parameters from a path string.
+ */
 export type Params<Path extends string> = AddNumbers<Path, ExtractParams<RemoveGroups<Path>>>;
 
 export default Params;

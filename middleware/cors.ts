@@ -1,13 +1,13 @@
-import type Context from "../lib/context.ts";
-import type { Middleware } from "../lib/router.ts";
+import type Context from "lib/context.ts";
+import type { Middleware } from "lib/router.ts";
 
 export const echo = Symbol("echo");
-export type Echo = typeof echo;
+type Echo = typeof echo;
 
-export const isEcho = (value: unknown): value is Echo => value === echo;
-export const array = (value: string | string[]): string[] => Array.isArray(value) ? value : [value];
+const isEcho = (value: unknown): value is Echo => value === echo;
+const array = (value: string | string[]): string[] => Array.isArray(value) ? value : [value];
 
-export const enum Header {
+const enum Header {
     Vary = "Vary",
     Origin = "Origin",
     AccessControlRequestMethod = "Access-Control-Request-Method",
@@ -20,7 +20,7 @@ export const enum Header {
     AccessControlMaxAge = "Access-Control-Max-Age",
 }
 
-export type CORSOptions = {
+type CORSOptions = {
     skip?: (context: Context) => boolean | Promise<boolean>;
     origins?: Echo | string | string[];
     methods?: Echo | string | string[];

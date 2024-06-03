@@ -1,30 +1,34 @@
-import Context from "./context.ts";
-import { ServerError } from "./error.ts";
+import Context from "lib/context.ts";
+import { ServerError } from "lib/error.ts";
 
-export type Handler<Path extends string = string> =
-    (context: Context<Path>) => unknown | Promise<unknown>;
+/**
+ * Middleware function definition.
+ */
 export type Middleware<Path extends string = string> =
     (context: Context<Path>, next: () => Promise<unknown>) => unknown | Promise<unknown>;
-export type Runner =
+
+type Handler<Path extends string = string> =
+    (context: Context<Path>) => unknown | Promise<unknown>;
+type Runner =
     (context: Context, handler: Handler) => ReturnType<Handler>;
 
-export const methods = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"] as const;
-export const notFound: Handler = () => new Response(null, { status: 404 });
+const methods = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"] as const;
+const notFound: Handler = () => new Response(null, { status: 404 });
 
-export type Route = <Path extends `/${string}`>
+type Route = <Path extends `/${string}`>
     (path: Path, handler: Handler<`${Path}`>, middlewares?: Middleware<`${Path}`>[]) => Router;
-export type RouterMethods = { [Method in typeof methods[number]]: Route };
+type RouterMethods = { [Method in typeof methods[number]]: Route };
 export interface Router extends RouterMethods {}
 
-export type SubRoute<Root extends string> = <Path extends `/${string}`>
+type SubRoute<Root extends string> = <Path extends `/${string}`>
     (path: Path, handler: Handler<`${Root}${Path}`>, middlewares?: Middleware<`${Root}${Path}`>[]) => SubRouter<Root>;
-export type SubRouterMethods<Root extends string> = { [Method in typeof methods[number]]: SubRoute<Root> };
-export interface SubRouter<Root extends string> extends SubRouterMethods<Root> {
+type SubRouterMethods<Root extends string> = { [Method in typeof methods[number]]: SubRoute<Root> };
+interface SubRouter<Root extends string> extends SubRouterMethods<Root> {
     use(middleware: Middleware<Root>): SubRouter<Root>;
     sub<SubRoot extends `/${string}`>(root: SubRoot): SubRouter<`${Root}${SubRoot}`>;
 }
 
-export function composeRunner(middlewares: Middleware[]): Runner {
+function composeRunner(middlewares: Middleware[]): Runner {
     return async (context, handler) => {
         let i = 0;
         let result: unknown;
@@ -46,7 +50,7 @@ export function composeRunner(middlewares: Middleware[]): Runner {
     };
 }
 
-export function composeHandler(handler: Handler, middlewares?: Middleware[]): Handler {
+function composeHandler(handler: Handler, middlewares?: Middleware[]): Handler {
     if (middlewares === undefined) {
         return handler;
     }

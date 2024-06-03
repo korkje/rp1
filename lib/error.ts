@@ -1,5 +1,11 @@
+/**
+ * ServerError parameters.
+ */
 export type ServerErrorParams = [] | [status: number, message: string, expose?: boolean];
 
+/**
+ * Class representing a server error.
+ */
 export class ServerError extends Error {
     public status: number;
     private exposed: boolean;
