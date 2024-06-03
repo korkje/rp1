@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Exports the {@link Router} class and related types.
+ */
+
 import Context from "lib/context.ts";
 import { ServerError } from "lib/error.ts";
 

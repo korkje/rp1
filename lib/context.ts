@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Exports the {@link Context} class.
+ */
+
 import { ServerError, type ServerErrorParams } from "lib/error.ts";
 import type Params from "lib/params.ts";
 

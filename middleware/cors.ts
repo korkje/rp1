@@ -1,6 +1,14 @@
+/**
+ * @module
+ * Exports the {@link cors} middleware.
+ */
+
 import type Context from "lib/context.ts";
 import type { Middleware } from "lib/router.ts";
 
+/**
+ * Indicates that the value should be echoed.
+ */
 export const echo = Symbol("echo");
 type Echo = typeof echo;
 

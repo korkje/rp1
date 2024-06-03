@@ -1,4 +1,9 @@
 /**
+ * @module
+ * Exports error-related classes and functions.
+ */
+
+/**
  * ServerError parameters.
  */
 export type ServerErrorParams = [] | [status: number, message: string, expose?: boolean];

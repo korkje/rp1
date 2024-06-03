@@ -1,3 +1,8 @@
+/**
+ * @module
+ * Exports the {@link Params} helper type.
+ */
+
 type Delim = "!" | "\"" | "#" /*| "$" */| "%" | "&" | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" /*| "_" */| "`" | "{" | "|" | "}" | "~";
 
 type Add<List extends unknown[], Item = unknown> = [...List, Item];
