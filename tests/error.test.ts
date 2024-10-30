@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
-import Router from "../lib/router.ts";
-import error, { ServerError } from "../lib/error.ts";
+import Router from "lib/router.ts";
+import error, { ServerError } from "lib/error.ts";
 
 const router = new Router();
 

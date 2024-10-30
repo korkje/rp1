@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 
-import Router from "../lib/router.ts";
+import Router from "lib/router.ts";
 
 const router = new Router();
 
@@ -89,7 +89,7 @@ Deno.test("Subrouter wildcard", async () => {
     assertEquals(body, { 0: "hello/world" });
     assertEquals(res.status, 200);
 
-    const res2 = await fetch("http://localhost:8000/sub");
+    const res2 = await fetch("http://localhost:8000/sub/");
     const body2 = await res2.json();
 
     assertEquals(body2, { 0: "" });

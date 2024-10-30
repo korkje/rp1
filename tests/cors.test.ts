@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
-import cors, { echo } from "../middleware/cors.ts";
-import Router from "../lib/router.ts";
-import { error } from "../mod.ts";
+import cors, { echo } from "middleware/cors.ts";
+import Router from "lib/router.ts";
+import { error } from "lib/error.ts";
 
 const router = new Router();
 

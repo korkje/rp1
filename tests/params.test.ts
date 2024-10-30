@@ -1,4 +1,4 @@
-import type { Params } from "../lib/params.ts";
+import type { Params } from "lib/params.ts";
 
 type AssertEq<T, U> =
     (<V>() => V extends T ? 1 : 2) extends
@@ -32,4 +32,6 @@ Deno.test("Params", () => {
     const _25: AssertEq<Params<"/\\(group\\)/(abc)">,          0                    > = true;
     const _26: AssertEq<Params<"/path{/:subpath}**">,          0 | "subpath"        > = true;
     const _27: AssertEq<Params<"/:param**">,                   "param" | 0          > = true;
+    const _28: AssertEq<Params<"/(abc)*">,                     0                    > = true;
+    const _29: AssertEq<Params<"/_{/abc}*">,                   never                > = true;
 });

@@ -12,19 +12,6 @@ type Size<T extends unknown[]> = T['length'];
 
 type IfEmpty<Path extends string, Then, Else> = Path extends "" ? Then : Else;
 
-// export type RemoveNonCapturingGroups<Path extends string> =
-//     Path extends `${infer Head}}${infer Tail}`
-//     ? Head extends `${string}\\`
-//         ? RemoveNonCapturingGroups<`${Head}#${Tail}`>
-//         : Tail extends `*${infer Tail2}`
-//             ? RemoveNonCapturingGroups<`${Head}#${Tail2}`>
-//             : RemoveNonCapturingGroups<`${Head}#${Tail}`>
-//     : Path extends `${infer Head}{${infer Tail}`
-//         ? Head extends `${string}\\`
-//             ? RemoveNonCapturingGroups<`${Head}#${Tail}`>
-//             : RemoveNonCapturingGroups<`${Head}#${Tail}`>
-//         : Path;
-
 type RemoveGroup<Path extends string, Counter extends unknown[] = [unknown]> =
     Size<Counter> extends 0 ? Path extends `*${infer Rest}` ? Rest : Path :
     Path extends `(${infer Rest}` ? RemoveGroup<Rest, Increment<Counter>> :
@@ -39,7 +26,6 @@ type RemoveGroups<Path extends string> =
         ? RemoveGroups<`${Head}#${Tail}`>
         : RemoveGroups<`${Head}#${RemoveGroup<Tail>}`>
     : Path;
-    // : RemoveNonCapturingGroups<Path>;
 
 type CountGroups<Path extends string, Params extends string, Counter extends unknown[] = []> =
     Path extends `${infer Head}(${infer Tail}`
@@ -70,7 +56,7 @@ type CountWildcards<Path extends string, Params extends string, Counter extends 
     Path extends `${infer Head}**${infer Tail}`
     ? CountWildcards<`${Head}${Tail}`, Params, Add<Counter, Size<Counter>>>
     : Path extends `${infer Head}*${infer Tail}`
-        ? Head extends `${string}:${Params}`
+        ? Head extends `${string}:${Params}` | `${string}}`
             ? CountWildcards<`${Head}${Tail}`, Params, Counter>
             : CountWildcards<`${Head}${Tail}`, Params, Add<Counter, Size<Counter>>>
         : Counter;
