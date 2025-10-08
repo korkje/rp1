@@ -1,6 +1,5 @@
 {
     "name": "@korkje/rp1",
-    "version": "0.0.0",
     "exports": {
         ".": "./mod.ts",
         "./lib/context": "./lib/context.ts",
