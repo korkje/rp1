@@ -50,10 +50,7 @@ export class ServerError extends Error {
 }
 
 /**
- * Creates a new ServerError instance.
- *
- * @param params - Parameters for the ServerError instance.
- * @returns
+ * Creates and returns a new ServerError instance.
  */
 export const error = (...params: ServerErrorParams): ServerError => new ServerError(...params);
 
